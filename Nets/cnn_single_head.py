@@ -7,8 +7,6 @@ from config import *
 class CNNNet(nn.Module):
     def __init__(self):
         super(CNNNet, self).__init__()
-        self.front_fc = nn.Linear(1, 1)
-        # the encoder part
         self.features = nn.Sequential(
             nn.Conv1d(1, 8, kernel_size=1, stride=1),
             nn.SELU(),
@@ -28,23 +26,12 @@ class CNNNet(nn.Module):
             nn.Flatten()
         )
 
-        # # the fully-connected layer 1
-        # self.classifier_1 = nn.Sequential(
-        #     nn.Linear(288, 2), # need change 700->288
-        #     nn.SELU(),
-        # )
-        # # the output layer
-        # self.final_classifier = nn.Sequential(
-        #     nn.Linear(2, output_k)
-        # )
-
         self.head = nn.Sequential(
             nn.Linear(512, 20), # need change 700->288
             nn.Linear(20, output_k),
             nn.Softmax(dim=1)
         )
     
-    # how the network runs
     def forward(self, input):
         input = input.view(input.size(0), 1, input.size(1))
         x = self.features(input)

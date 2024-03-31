@@ -9,16 +9,25 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 # from DataLoaders.LoadCatdog import Datasetloader
 from DataLoaders.LoadPartASCAD import Datasetloader
-from Nets.Resnet import ResNet_18
 from config import *
 
 def val():
-    test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, 25000, 50000)
+    test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, left, right)
     # 加载模型
     if (saveModel == False):
         if (save_weight == True):
-            model = ResNet_18()
-            model.load_state_dict(torch.load(modelsaveName))
+            if (net_structure == 'cs3'):
+                from Nets.cnn_single_head_3layer import CNNNet
+                model = CNNNet().to(device)
+            elif (net_structure == 'resnet18'):
+                from Nets.Resnet import ResNet_18
+                model = ResNet_18().to(device)
+            elif (net_structure == 'cs4'):
+                from Nets.cnn_single_head import CNNNet
+                model = CNNNet().to(device)
+            elif (net_structure == 'ms5'):
+                from Nets.mlp_5layer import MLPNet
+                model = MLPNet().to(device)
         else:
             model = torch.load(modelsaveName)
         model.eval()
@@ -53,7 +62,6 @@ def val():
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
                 acc_traces.append(correct / total)
-        acc_num_sub_heads.append(acc_traces)
         accuracy = correct / total
         if (t_total == 0):
             threshold_accuracy = 0
@@ -62,8 +70,7 @@ def val():
         print(f"正确个数:{correct}/{total} 测试总准确率: {accuracy * 100:.2f}%")
         print(f"正确个数:{t_correct}/{t_total} 测试阈值准确率: {threshold_accuracy * 100:.2f}%")
         # 绘制acc-traces曲线
-        for i in range(num_sub_heads):
-            plt.plot(acc_num_sub_heads[i], label=f"{i} head")
+        plt.plot(acc_traces)
         plt.xlabel("Traces")
         plt.ylabel("Accuracy")
         plt.legend()

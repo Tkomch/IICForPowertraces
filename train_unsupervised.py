@@ -7,11 +7,10 @@ import torch.nn as nn
 # from DataTransers.ImageTranser import DoubleBatchTransform
 from DataTransers.TraceTranser import TripleBatchTransform
 from IIC_Loss import IIC_Loss
-from DataLoaders.LoadASCAD import Datasetloader
+from DataLoaders.LoadPartASCAD import Datasetloader
 from config import *
 # 引入网络结构
-# from Nets.net5g import ClusterNet5g
-from Nets.cnn_multi-head import CNNNet
+from Nets.cnn_multi_head import CNNNet
 from utils import setup_seed
 from tqdm import tqdm
 
@@ -19,7 +18,7 @@ setup_seed(seed)
 # show = ToPILImage()  # 可以把Tensor转成Image，方便可视化
 
 def train():
-    train_loader, _ = Datasetloader(train_data_path)(bs, is_shuffle, dataset_mode)
+    train_loader, _ = Datasetloader(train_data_path)(bs, is_shuffle, dataset_mode, left, right)
     # 更改网络结构在这里
     model = CNNNet().to(device)
 

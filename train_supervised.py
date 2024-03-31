@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 # 可视化张量图片
 from DataTransers.TraceTranser import TripleBatchTransform
-from DataLoaders.LoadASCAD import Datasetloader
+from DataLoaders.LoadPartASCAD import Datasetloader
 from config import *
 # 引入网络结构
 from Nets.cnn_single_head_3layer import CNNNet
@@ -15,7 +15,7 @@ from tqdm import tqdm
 setup_seed(seed)
 
 def train():
-    train_loader, _ = Datasetloader(train_data_path)(bs, is_shuffle, dataset_mode)
+    train_loader, _ = Datasetloader(train_data_path)(bs, is_shuffle, dataset_mode, left, right)
 
     criterion = nn.CrossEntropyLoss()
     criterion = criterion.to(device)
@@ -23,7 +23,20 @@ def train():
     loss_list = []
     tran = TripleBatchTransform()
     # 更改网络结构在这里
-    model = CNNNet().to(device)
+    print("将使用%s网络结构进行训练" % net_structure)
+    if (net_structure == 'cs3'):
+        from Nets.cnn_single_head_3layer import CNNNet
+        model = CNNNet().to(device)
+    elif (net_structure == 'resnet18'):
+        from Nets.Resnet import ResNet_18
+        model = ResNet_18().to(device)
+    elif (net_structure == 'cs4'):
+        from Nets.cnn_single_head import CNNNet
+        model = CNNNet().to(device)
+    elif (net_structure == 'ms5'):
+        from Nets.mlp_5layer import MLPNet
+        model = MLPNet().to(device)
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     for epoch in range(num_epochs):

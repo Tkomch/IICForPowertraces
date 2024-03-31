@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
 import numpy as np
-# import pywt
+from sklearn.decomposition import PCA
 import sys
 sys.path.append('..')
 from config import *
@@ -11,20 +11,6 @@ from config import *
 class Datasetloader():
     def __init__(self, data_path):
         self.data_file_path = data_path
-
-    # 小波变换
-    # def wavelet_decompose(self, data, get_level, max_level=5):
-    #     result = []
-    #     coeffs = pywt.wavedec(data, 'db4', level=max_level)
-    #     cA5, cD5, cD4, cD3, cD2, cD1 = coeffs
-    #     # 小波重构
-    #     result.append(pywt.waverec(np.multiply(coeffs, [1, 0, 0, 0, 0, 0]).tolist(), 'db4'))
-    #     result.append(pywt.waverec(np.multiply(coeffs, [0, 1, 0, 0, 0, 0]).tolist(), 'db4'))
-    #     result.append(pywt.waverec(np.multiply(coeffs, [0, 0, 1, 0, 0, 0]).tolist(), 'db4'))
-    #     result.append(pywt.waverec(np.multiply(coeffs, [0, 0, 0, 1, 0, 0]).tolist(), 'db4'))
-    #     result.append(pywt.waverec(np.multiply(coeffs, [0, 0, 0, 0, 1, 0]).tolist(), 'db4'))
-    #     result.append(pywt.waverec(np.multiply(coeffs, [1, 0, 0, 0, 0, 1]).tolist(), 'db4'))
-    #     return result[get_level]
 
     def __call__(self, bs, shuffle_, mode, left, right):
         in_file = h5py.File(self.data_file_path, 'r')
@@ -47,12 +33,14 @@ class Datasetloader():
                 plain_text.append(md[0][2])
             plain_text_ = np.array(plain_text)
     
+        if use_pca:
+            print("使用PCA进行降维，维度为%d" % pca_dim)
+            self.PCA = PCA(n_components=pca_dim)
+            self.PCA.fit(traces_profiling)
+            traces_profiling = self.PCA.transform(traces_profiling)
         # 输出labels_profiling的形状
         print(labels_profiling.shape)
         plain_text_ = torch.from_numpy(plain_text_)
-        # if wave_flag:
-        #     traces_profiling = np.array([self.wavelet_decompose(traces_profiling[i], get_level, max_level) for i in range(len(traces_profiling))])
-        #     print(traces_profiling.shape)
         traces, labels = torch.from_numpy(traces_profiling).float(), torch.from_numpy(labels_profiling)
         labels = self.convert_labels(labels, label_type)
         print(f"labels shape: {labels.shape}")
@@ -61,31 +49,25 @@ class Datasetloader():
         loader = DataLoader(dataset=ascad_dataset, batch_size=bs, shuffle=shuffle_)
         return loader, plain_text_
 
+    # 计算一个值的汉明重量
+    def hamming_weight(self, num):
+        count = 0
+        while num:
+            count += 1
+            num &= num - 1
+        return count
+
     # 将labels值转为其他分类的labels
     def convert_labels(self, labels, label_type):
         for i, label in enumerate(labels):
             if (label_type == 2):
-                labels[i] = label >> 7
-            elif (label_type == 4):
-                labels[i] = label >> 6
-            elif (label_type == 8):
-                labels[i] = label >> 5
-            elif (label_type == 16):
-                labels[i] = label >> 4
-            elif (label_type == 32):
-                labels[i] = label >> 3
-            elif (label_type == 64):
-                labels[i] = label >> 2
-            elif (label_type == 128):
-                labels[i] = label >> 1
+                # 如果汉明重量等于4就废弃
+                if (self.hamming_weight(label.item()) < 4):
+                    labels[i] = 0
+                elif (self.hamming_weight(label.item()) > 4):
+                    labels[i] = 1
+                else:
+                    labels[i] = 0
+            elif (label_type == 9):
+                labels[i] = self.hamming_weight(label.item())
         return labels
-
-# TEST
-# if __name__ == '__main__':
-#     datasetloader = Datasetloader(train_data_path)
-#     loader, plain_text = datasetloader(1, True, 0)
-#     for i, (data, label) in enumerate(loader):
-#         print(label)
-#         break
-#     print(255 >> 7)
-
