@@ -1,8 +1,8 @@
 from torch import nn
 import torch
 import numpy as np
-# import pywt
 import sys
+from sklearn.decomposition import PCA
 sys.path.append('..')
 from config import *
 
@@ -15,7 +15,7 @@ class LoopMove():
         # x shape [bs len]
         x_np = x.cpu().numpy()
         x_np = np.roll(x_np, self.move, axis=1)
-        x = torch.from_numpy(x_np).to(x.device)
+        x = torch.from_numpy(x_np).to(device)
         return x
 
 class RandomLoopMove():
@@ -49,7 +49,7 @@ class Integrate():
             for j, d in enumerate(data):
                 x_np[i][2*j] = data[j]
                 x_np[i][2*j+1] = data[j]
-        x = torch.from_numpy(x_np).to(x.device)
+        x = torch.from_numpy(x_np).to(device)
         return x
 
 # 加入高斯噪声
@@ -63,7 +63,7 @@ class AddGaussianNoise():
         noise = (torch.randn(x[0].size()) * self.std + self.mean).numpy()
         for i, data in enumerate(x_np):
             x_np[i] = data + noise
-        return torch.from_numpy(x_np).to(x.device)
+        return torch.from_numpy(x_np).to(device)
 
 # 水平翻转
 # class HorizontalFlip():
@@ -86,7 +86,7 @@ class Normalize():
         for i, data in enumerate(x_np):
             data = (data - np.mean(data)) / np.std(data)
             x_np[i] = data
-        return x
+        return torch.from_numpy(x_np).to(device)
     
 # TODO 小波变换
 # class WaveTransform():
@@ -133,6 +133,25 @@ class TripleBatchTransform(nn.Module):
         x = self.integrate(x)
         x = self.normalize(x)
         return x
+
+class PCATransform(nn.Module):
+    def __init__(self, pca_dim):
+        self.PCA = PCA(pca_dim)
+
+    def __call__(self, x):
+        self.PCA.fit(x)
+        x = self.PCA.transform(x)
+        return x
+
+class PCATransform2(nn.Module):
+    def __init__(self, pca_dim):
+        self.PCA = PCA(pca_dim)
+
+    def __call__(self, x):
+        self.PCA.fit(x)
+        x = self.PCA.transform(x)
+        # 将x的维度保持和pca_dim一致
+        return x[:, -1 * pca_dim:]
 
 class TripleBatchTransform2(nn.Module):
     def __init__(self):
