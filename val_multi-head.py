@@ -7,12 +7,11 @@ import torchvision
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-# from DataLoaders.LoadCatdog import Datasetloader
-from DataLoaders.LoadASCAD import Datasetloader
+from DataLoaders.LoadPartASCAD import Datasetloader
 from config import *
 
 def val():
-    test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode)
+    test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, left, right)
     # 加载模型
     if (saveModel == False):
         model = torch.load(modelsaveName)
