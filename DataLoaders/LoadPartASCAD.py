@@ -7,6 +7,8 @@ from sklearn.decomposition import PCA
 import sys
 sys.path.append('..')
 from config import *
+from DataTransers.TraceTranser import PCATransform
+from DataTransers.TraceTranser import PCATransform2
 
 class Datasetloader():
     def __init__(self, data_path):
@@ -33,20 +35,27 @@ class Datasetloader():
                 plain_text.append(md[0][2])
             plain_text_ = np.array(plain_text)
     
-        if use_pca:
-            print("使用PCA进行降维，维度为%d" % pca_dim)
-            self.PCA = PCA(n_components=pca_dim)
-            self.PCA.fit(traces_profiling)
-            traces_profiling = self.PCA.transform(traces_profiling)
         # 输出labels_profiling的形状
         print(labels_profiling.shape)
+        labels = torch.from_numpy(labels_profiling)
         plain_text_ = torch.from_numpy(plain_text_)
-        traces, labels = torch.from_numpy(traces_profiling).float(), torch.from_numpy(labels_profiling)
         labels = self.convert_labels(labels, label_type)
         print(f"labels shape: {labels.shape}")
         print(labels)
-        ascad_dataset = TensorDataset(traces, labels)
-        loader = DataLoader(dataset=ascad_dataset, batch_size=bs, shuffle=shuffle_)
+
+        if use_pca:
+            print("使用PCA降维")
+            pca_trans1 = PCATransform(pca_dim)
+            pca_trans2 = PCATransform2(transpca_dim)
+            traces_profiling1 = pca_trans1(traces_profiling)
+            traces_profiling2 = pca_trans2(traces_profiling)
+            traces, traces2 = torch.from_numpy(traces_profiling1).float(), torch.from_numpy(traces_profiling2).float()
+            ascad_dataset = TensorDataset(traces, traces2, labels)
+            loader = DataLoader(dataset=ascad_dataset, batch_size=bs, shuffle=shuffle_)
+        else:
+            traces = torch.from_numpy(traces_profiling).float()
+            ascad_dataset = TensorDataset(traces, labels)
+            loader = DataLoader(dataset=ascad_dataset, batch_size=bs, shuffle=shuffle_)
         return loader, plain_text_
 
     # 计算一个值的汉明重量
