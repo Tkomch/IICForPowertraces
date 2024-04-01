@@ -79,8 +79,9 @@ if __name__ == "__main__":
     rank_list = []
     with torch.no_grad():
         for i, data in enumerate(tqdm(test_data_loader)):
-            att_trace, att_label = data
+            att_trace, att_trace2, att_label = data
             att_trace = att_trace.to(device)
+            att_trace2 = att_trace2.to(device)
             att_label = att_label.to(device)
             # att_trace = trans_func(att_trace)
             outputs = model(att_trace)
@@ -132,7 +133,8 @@ if __name__ == "__main__":
             #     plt.show()
 
     plt.plot(rank_list)
-    plt.show()
+    # plt.show()
+    plt.savefig(rank_save_path)
 
             # predicted = torch.argmax(outputs, dim=1).item()
 
