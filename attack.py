@@ -54,7 +54,7 @@ if __name__ == "__main__":
         model = ResNet_18()
         model.load_state_dict(torch.load(modelsaveName))
     else:
-        model = torch.load(modelsaveName)
+        model = torch.load(modelsaveName, map_location=device)
     model.eval()
     model = model.to(device)
 

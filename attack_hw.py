@@ -46,10 +46,6 @@ def cal_middleval(p_text, key):
     row = m_val >> 4
     col = m_val & 0x0F
     mid_result = hamming_weight(int(s_box[row][col]))
-    # TODO
-    print(int(s_box[row][col]))
-    print(mid_result)
-    exit()
     # 二分类
     if (mid_result <= 4):
         return 0
@@ -67,9 +63,9 @@ if __name__ == "__main__":
 
     if (save_weight == True):
         model = ResNet_18()
-        model.load_state_dict(torch.load(modelsaveName))
+        model.load_state_dict(torch.load(modelsaveName, map_location=device))
     else:
-        model = torch.load(modelsaveName)
+        model = torch.load(modelsaveName, map_location=device)
     model.eval()
     model = model.to(device)
 
@@ -86,7 +82,7 @@ if __name__ == "__main__":
             att_trace, att_label = data
             att_trace = att_trace.to(device)
             att_label = att_label.to(device)
-            # att_trace = trans_func(att_trace)
+            att_trace = trans_func(att_trace)
             outputs = model(att_trace)
             # 中间值分数 #
             # softmax_outputs = F.softmax(outputs, dim=1)
