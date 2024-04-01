@@ -14,7 +14,7 @@ def val():
     test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, left, right)
     # 加载模型
     if (saveModel == False):
-        model = torch.load(modelsaveName)
+        model = torch.load(modelsaveName, map_location=device)
         model.eval()
         model = model.to(device)
         acc_num_sub_heads = []
@@ -68,7 +68,7 @@ def val():
         max_model = ""
         accuracy_all = []
         for file in model_file:
-            model = torch.load(saveModelPath + file)
+            model = torch.load(saveModelPath + file, map_location=device)
             model.eval()
             model = model.to(device)
             acc_epoch = []
