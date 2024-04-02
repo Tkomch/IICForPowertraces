@@ -34,6 +34,12 @@ class Datasetloader():
             for md in metadatas:
                 plain_text.append(md[0][2])
             plain_text_ = np.array(plain_text)
+
+        # 重复数据
+        for i in range(1, dataset_count):
+            traces_profiling = np.concatenate((traces_profiling, traces_profiling), axis=0)
+            labels_profiling = np.concatenate((labels_profiling, labels_profiling), axis=0)
+            plain_text_ = np.concatenate((plain_text_, plain_text_), axis=0)
     
         # 输出labels_profiling的形状
         print(labels_profiling.shape)
