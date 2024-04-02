@@ -28,8 +28,8 @@ def val():
             t_correct = 0
             with torch.no_grad():
                 for data in tqdm(test_loader):
-                    images, labels = data
-                    images, labels = images.to(device), labels.to(device)
+                    images, images2, labels = data
+                    images, images2, labels = images.to(device), images2.to(device), labels.to(device)
                     outputs = model(images)
                     
                     # 对输出进行阈值筛选，计算准确率
@@ -79,7 +79,7 @@ def val():
                 t_total = 0
                 with torch.no_grad():
                     for data in tqdm(test_loader):
-                        images, labels = data
+                        images, _, labels = data
                         images, labels = images.to(device), labels.to(device)
                         outputs = model(images)
                         # 对输出进行阈值筛选，计算准确率

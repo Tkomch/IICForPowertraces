@@ -3,12 +3,11 @@ import os
 import torch
 import torch.nn as nn
 # 可视化张量图片
-from DataTransers.TraceTranser import TripleBatchTransform
+from DataTransers.TraceTranser import PCATransform
+from DataTransers.TraceTranser import PCATransform2
 from DataLoaders.LoadPartASCAD import Datasetloader
 from config import *
 # 引入网络结构
-from Nets.cnn_single_head_3layer import CNNNet
-from Nets.Resnet import ResNet_18
 from utils import setup_seed
 from tqdm import tqdm
 
@@ -21,7 +20,8 @@ def train():
     criterion = criterion.to(device)
 
     loss_list = []
-    tran = TripleBatchTransform()
+    tran = PCATransform(pca_dim)
+    tran2 = PCATransform2(transpca_dim)
     # 更改网络结构在这里
     print("将使用%s网络结构进行训练" % net_structure)
     if (net_structure == 'cs3'):
@@ -44,11 +44,10 @@ def train():
         running_loss = 0.0
         print(f"epoch: {epoch}")
         for i, data in enumerate(tqdm(train_loader), 0):
-            inputs, labels = data
-            inputs, labels = inputs.to(device), labels.to(device)
-            inputs_trans = tran(inputs)
+            inputs, inputs2, labels = data
+            inputs, inputs2, labels = inputs.to(device), inputs2.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(inputs_trans)
+            outputs = model(inputs2)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
