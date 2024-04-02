@@ -1,0 +1,7 @@
+# 忽略所有python中间文件
+*__pycache__/
+# 忽略试验结果
+Metrics/
+Models/
+Figure/
+tags
