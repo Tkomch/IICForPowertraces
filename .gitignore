@@ -5,3 +5,7 @@ Metrics/
 Models/
 Figure/
 tags
+Rank/
+# 忽略配置文件
+config.py
+
