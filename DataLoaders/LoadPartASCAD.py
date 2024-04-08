@@ -35,11 +35,14 @@ class Datasetloader():
                 plain_text.append(md[0][2])
             plain_text_ = np.array(plain_text)
 
+        cat_tprofiling = traces_profiling
+        cat_lprofiling = labels_profiling
+        cat_plaintext = plain_text_
         # 重复数据
         for i in range(1, dataset_count):
-            traces_profiling = np.concatenate((traces_profiling, traces_profiling), axis=0)
-            labels_profiling = np.concatenate((labels_profiling, labels_profiling), axis=0)
-            plain_text_ = np.concatenate((plain_text_, plain_text_), axis=0)
+            traces_profiling = np.concatenate((traces_profiling, cat_tprofiling), axis=0)
+            labels_profiling = np.concatenate((labels_profiling, cat_lprofiling), axis=0)
+            plain_text_ = np.concatenate((plain_text_, cat_plaintext), axis=0)
     
         # 输出labels_profiling的形状
         print(labels_profiling.shape)
@@ -50,7 +53,7 @@ class Datasetloader():
         print(labels)
 
         if use_pca:
-            print("使用PCA降维")
+            print(f"使用PCA降维, 1维度为{pca_dim}, 2维度为{transpca_dim}")
             pca_trans1 = PCATransform(pca_dim)
             pca_trans2 = PCATransform2(transpca_dim)
             traces_profiling1 = pca_trans1(traces_profiling)

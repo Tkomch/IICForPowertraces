@@ -47,10 +47,13 @@ def cal_middleval(p_text, key):
     col = m_val & 0x0F
     mid_result = hamming_weight(int(s_box[row][col]))
     # 二分类
-    if (mid_result <= 4):
-        return 0
-    else:
-        return 1
+    if (label_type == 2):
+        if (mid_result <= 4):
+            return 0
+        else:
+            return 1
+    elif (label_type == 9):
+        return mid_result
 
 
 if __name__ == "__main__":
@@ -59,7 +62,7 @@ if __name__ == "__main__":
         key_score[i] = 0.0
 
     trans_func = TripleBatchTransform()
-    test_data_loader, plain_texts = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, 0, 50000)
+    test_data_loader, plain_texts = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, left, right)
 
     if (save_weight == True):
         model = ResNet_18()
@@ -97,7 +100,7 @@ if __name__ == "__main__":
                 mval_key[cal_middleval(plain_texts[i].item(), k)].append(k)
 
             # 将中间值分数赋给密钥 #
-            for mv in range(2):
+            for mv in range(label_type):
                 for softmax_output in softmax_outputs:
                     # 按照output_order的顺序换掉softmax_output的顺序
                     output_temp = softmax_output.clone()

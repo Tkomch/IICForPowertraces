@@ -14,12 +14,48 @@ def val():
     test_loader, _ = Datasetloader(test_data_path)(bs, is_shuffle, dataset_mode, left, right)
     # 加载模型
     if (saveModel == False):
-        model = torch.load(modelsaveName, map_location=device)
+        if (save_weight == True):
+            if (net_structure == 'cs3'):
+                from Nets.cnn_single_head_3layer import CNNNet
+                model = CNNNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            elif (net_structure == 'resnet18'):
+                from Nets.Resnet import ResNet_18
+                model = ResNet_18().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            elif (net_structure == 'cs4'):
+                from Nets.cnn_single_head import CNNNet
+                model = CNNNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            elif (net_structure == 'ms5'):
+                from Nets.mlp_5layer import MLPNet
+                model = MLPNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            if (net_structure == 'cm3'):
+                from Nets.cnn_multi_head import CNNNet
+                model = CNNNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            if (net_structure == 'mm5'):
+                from Nets.mlp_mutil_head_5layer import MLPNet
+                model = MLPNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            if (net_structure == 'mm7'):
+                from Nets.mlp_mutil_head_7layer import MLPNet
+                model = MLPNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+            if (net_structure == 'cmp3'):
+                from Nets.cnn_mutil_head_pca import CNNNet
+                model = CNNNet().to(device)
+                model.load_state_dict(torch.load(modelsaveName, map_location=device))
+        else:
+            model = torch.load(modelsaveName, map_location=device)
         model.eval()
         model = model.to(device)
         acc_num_sub_heads = []
         # 随着曲线增加的准确率
         for i in range(num_sub_heads):
+            if (i != chosen_head):
+                continue
             correct = 0
             total = 0
             acc_traces = []
@@ -31,6 +67,12 @@ def val():
                     images, images2, labels = data
                     images, images2, labels = images.to(device), images2.to(device), labels.to(device)
                     outputs = model(images)
+
+                    # 交换输出顺序
+                    for i_bs, output in enumerate(outputs[i]):
+                        output_temp = output.clone()
+                        for j in range(len(output_order)):
+                            outputs[i][i_bs][j] = output_temp[output_order[j]]
                     
                     # 对输出进行阈值筛选，计算准确率
                     threshold_true_index = []
@@ -50,16 +92,19 @@ def val():
                     acc_traces.append(correct / total)
             acc_num_sub_heads.append(acc_traces)
             accuracy = correct / total
-            threshold_accuracy = t_correct / t_total
+            if (t_total != 0):
+                threshold_accuracy = t_correct / t_total
+            else:
+                threshold_accuracy = 0
             print(f"正确个数:{correct}/{total} {i}头测试总准确率: {accuracy * 100:.2f}%")
             print(f"正确个数:{t_correct}/{t_total} {i}头测试阈值准确率: {threshold_accuracy * 100:.2f}%")
         # 绘制acc-traces曲线
-        for i in range(num_sub_heads):
-            plt.plot(acc_num_sub_heads[i], label=f"{i} head")
-        plt.xlabel("Traces")
-        plt.ylabel("Accuracy")
-        plt.legend()
-        plt.show()
+        # for i in range(num_sub_heads):
+        #     plt.plot(acc_num_sub_heads[i], label=f"{i} head")
+        # plt.xlabel("Traces")
+        # plt.ylabel("Accuracy")
+        # plt.legend()
+        # plt.show()
         print()
     else:
         m = os.listdir(saveModelPath)
@@ -82,6 +127,13 @@ def val():
                         images, _, labels = data
                         images, labels = images.to(device), labels.to(device)
                         outputs = model(images)
+
+                        # 交换输出顺序
+                        for i_bs, output in enumerate(outputs[i]):
+                            output_temp = output.clone()
+                            for j in range(len(output_order)):
+                                outputs[i][i_bs][j] = output_temp[output_order[j]]
+
                         # 对输出进行阈值筛选，计算准确率
                         threshold_true_index = []
                         for bs_i, bs_data in enumerate(outputs[i]):

@@ -36,6 +36,18 @@ def train():
     elif (net_structure == 'ms5'):
         from Nets.mlp_5layer import MLPNet
         model = MLPNet().to(device)
+    if (net_structure == 'cm3'):
+        from Nets.cnn_multi_head import CNNNet
+        model = CNNNet().to(device)
+    if (net_structure == 'mm5'):
+        from Nets.mlp_mutil_head_5layer import MLPNet
+        model = MLPNet().to(device)
+    if (net_structure == 'mm7'):
+        from Nets.mlp_mutil_head_7layer import MLPNet
+        model = MLPNet().to(device)
+    if (net_structure == 'cmp3'):
+        from Nets.cnn_mutil_head_pca import CNNNet
+        model = CNNNet().to(device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -47,8 +59,10 @@ def train():
             inputs, inputs2, labels = data
             inputs, inputs2, labels = inputs.to(device), inputs2.to(device), labels.to(device)
             optimizer.zero_grad()
-            outputs = model(inputs2)
-            loss = criterion(outputs, labels)
+            outputs = model(inputs)
+            loss = 0.0
+            for i in range(num_sub_heads):
+                loss += criterion(outputs[i], labels)
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
@@ -58,10 +72,14 @@ def train():
             if not os.path.exists(saveModelPath):
                 os.makedirs(saveModelPath)
             torch.save(model, saveModelPath + f"model_{epoch}.pth")
+
     # 保存模型
     print(f"最终模型保存在{modelsaveName}")
-    torch.save(model, modelsaveName)
-    with open(lossSavePath, "w") as f:
+    if (save_weight == False):
+        torch.save(model, sur_modelsavename)
+    else:
+        torch.save(model.state_dict(), sur_modelsavename)
+    with open(sur_lossSavePath, "w") as f:
         for loss_epoch in loss_list:
             f.write(str(loss_epoch) + "\n")
     

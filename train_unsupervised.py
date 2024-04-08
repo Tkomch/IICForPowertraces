@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 # 可视化张量图片
 from DataTransers.TraceTranser import TripleBatchTransform
+from DataTransers.TraceTranser import LoopMove
 from IIC_Loss import IIC_Loss
 from DataLoaders.LoadPartASCAD import Datasetloader
 from config import *
@@ -27,14 +28,22 @@ def train():
     if (net_structure == 'mm7'):
         from Nets.mlp_mutil_head_7layer import MLPNet
         model = MLPNet().to(device)
+    if (net_structure == 'cmp3'):
+        from Nets.cnn_mutil_head_pca import CNNNet
+        model = CNNNet().to(device)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    print(f"使用{opt_structure}作为优化器")
+    if (opt_structure == 'adam'):
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    elif (opt_structure == 'SGD'):
+        optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     iic_loss_fn = IIC_Loss()
     iic_loss_fn = iic_loss_fn.to(device)
 
     # transformer2 = TripleBatchTransform()
     # transformer2 = transformer2.to(device)
+    transformer2 = LoopMove(fixed_move)
     # 将每个epoch的loss保存下来
     loss_list = []
     for epoch in range(num_epochs):
@@ -42,10 +51,10 @@ def train():
         running_loss = 0.0
         print(f"epoch: {epoch}")
         for i, data in enumerate(tqdm(train_loader), 0):
-            inputs, inputs_trans, labels = data
-            inputs, inputs_trans, labels = inputs.to(device), inputs_trans.to(device), labels.to(device)
+            inputs, _, labels = data
+            inputs, labels = inputs.to(device), labels.to(device)
             # 通过数据变换对象对数据进行变换
-            # inputs_trans = transformer2(inputs)
+            inputs_trans = transformer2(inputs)
             optimizer.zero_grad()
             outputs1 = model(inputs)
             outputs2 = model(inputs_trans)

@@ -22,24 +22,11 @@ class CNNNet(nn.Module):
             nn.SELU(),
             nn.BatchNorm1d(32),
             nn.AvgPool1d(kernel_size=3, stride=3),
-            nn.Conv1d(32, 64, kernel_size=3, stride=1),
-            nn.SELU(),
-            nn.BatchNorm1d(64),
             nn.Flatten()
         )
 
-        # # the fully-connected layer 1
-        # self.classifier_1 = nn.Sequential(
-        #     nn.Linear(288, 2), # need change 700->288
-        #     nn.SELU(),
-        # )
-        # # the output layer
-        # self.final_classifier = nn.Sequential(
-        #     nn.Linear(2, output_k)
-        # )
-
         self.heads = nn.ModuleList([nn.Sequential(
-            nn.Linear(448, 20), # need change 700->288
+            nn.Linear(228, 20), # need change 700->288
             nn.Linear(20, output_k),
             nn.Softmax(dim=1)
             ) for _ in range(num_sub_heads)])
